@@ -49,12 +49,17 @@ simple api. supports only: string, int, int64, float32, float64 and bool types.
 
 
 ini.Read('config.ini') - parses the file
+
 ini.Write('config.ini') - writes config to file
 
+
 ini.Set("section", "key", "value") - adds item to config if value is empty, add key.
+
 ini.Delte("section", "key") - if key is empty, deletes section
 
+
 ini.GetKeysList("section") - returns all keys without values
+
 
 ini.Exists("section", "key") - returns true if section has that key
 
