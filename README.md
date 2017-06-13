@@ -1,5 +1,4 @@
 # go-ini
-just anothe config.ini file parser
 
 sample config:
 
