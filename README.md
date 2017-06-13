@@ -55,7 +55,7 @@ ini.Write('config.ini') - writes config to file
 
 ini.Set("section", "key", "value") - adds item to config if value is empty, add key.
 
-ini.Delte("section", "key") - if key is empty, deletes section
+ini.Delete("section", "key") - if key is empty, deletes section
 
 
 ini.GetKeysList("section") - returns all keys without values
