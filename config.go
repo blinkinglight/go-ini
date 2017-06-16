@@ -339,15 +339,25 @@ func Write(filename string) {
 	for _, section := range keys {
 		f.WriteString(fmt.Sprintln(section, "{"))
 		for k, v := range config[section] {
+			if !v.haveValue {
+				continue
+			}
 			comment := ""
 			if len(v.comment) > 0 {
 				comment = "// " + v.comment
 			}
+			f.WriteString(fmt.Sprintf("  %s = %s %s\n", k, v.value, comment))
+		}
+
+		for k, v := range config[section] {
 			if v.haveValue {
-				f.WriteString(fmt.Sprintf("  %s = %s %s\n", k, v.value, comment))
-			} else {
-				f.WriteString(fmt.Sprintf("  %s %s\n", k, comment))
+				continue
 			}
+			comment := ""
+			if len(v.comment) > 0 {
+				comment = "// " + v.comment
+			}
+			f.WriteString(fmt.Sprintf("  %s %s\n", k, comment))
 		}
 		f.WriteString(fmt.Sprintln("}"))
 		f.WriteString(fmt.Sprintln())
