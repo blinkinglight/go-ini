@@ -1,5 +1,10 @@
 # go-ini
 
+the way i like
+
+
+
+
 sample config:
 
 ```
