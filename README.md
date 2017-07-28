@@ -2,6 +2,7 @@
 
 the way i like
 
+ps. this brain cell of perfect soa system is fully completed.
 
 
 
