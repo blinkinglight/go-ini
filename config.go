@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type item struct {
@@ -19,6 +20,8 @@ const keyNotFound = "key not found in config file"
 var keys []string
 var config map[string]map[string]item = make(map[string]map[string]item)
 
+var mu sync.RWMutex
+
 func spl(q string) []string {
 	r := []string{}
 	r = strings.Split(q, ".")
@@ -26,6 +29,8 @@ func spl(q string) []string {
 }
 
 func Read(filename string) {
+	mu.Lock()
+	defer mu.Unlock()
 	f, err := os.Open(filename)
 
 	if err != nil {
@@ -171,6 +176,8 @@ func GetInt64Default(section, key string, d int64) int64 {
 }
 
 func Sections() []string {
+	mu.RLock()
+	defer mu.RUnlock()
 	list := []string{}
 
 	for k, _ := range config {
@@ -180,6 +187,8 @@ func Sections() []string {
 }
 
 func GetKeys(section string) ([]string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	list := []string{}
 	if _, ok := config[section]; !ok {
 		return []string{}, fmt.Errorf(keyNotFound)
@@ -191,6 +200,8 @@ func GetKeys(section string) ([]string, error) {
 }
 
 func GetKeysList(section string) ([]string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	list := []string{}
 
 	if _, ok := config[section]; !ok {
@@ -208,6 +219,8 @@ func GetKeysList(section string) ([]string, error) {
 }
 
 func GetString(section, key string) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	r, ok := config[section][key]
 	if !ok {
 		return "", fmt.Errorf(keyNotFound)
@@ -216,6 +229,8 @@ func GetString(section, key string) (string, error) {
 }
 
 func GetBool(section, key string) (bool, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	v, ok := config[section][key]
 	if !ok {
 		return false, fmt.Errorf(keyNotFound)
@@ -228,6 +243,8 @@ func GetBool(section, key string) (bool, error) {
 }
 
 func GetInt(section, key string) (int, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	tmp, ok := config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
@@ -242,6 +259,8 @@ func GetInt(section, key string) (int, error) {
 }
 
 func GetFloat(section, key string) (float32, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	tmp, ok := config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
@@ -256,6 +275,8 @@ func GetFloat(section, key string) (float32, error) {
 }
 
 func GetInt64(section, key string) (int64, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	tmp, ok := config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
@@ -270,6 +291,8 @@ func GetInt64(section, key string) (int64, error) {
 }
 
 func GetFloat64(section, key string) (float64, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 	tmp, ok := config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
@@ -284,6 +307,8 @@ func GetFloat64(section, key string) (float64, error) {
 }
 
 func Delete(section, key string) {
+	mu.RLock()
+	defer mu.RUnlock()
 	if len(key) == 0 {
 		delete(config, section)
 		ks := []string{}
@@ -300,6 +325,8 @@ func Delete(section, key string) {
 }
 
 func Set(section, key, value string) {
+	mu.Lock()
+	defer mu.Unlock()
 
 	i := item{}
 
@@ -321,6 +348,8 @@ func Set(section, key, value string) {
 }
 
 func Exists(section, key string) bool {
+	mu.RLock()
+	defer mu.RUnlock()
 	if _, ok := config[section]; ok {
 		if _, ok := config[section][key]; ok {
 			return true
@@ -330,6 +359,8 @@ func Exists(section, key string) bool {
 }
 
 func Write(filename string) {
+	mu.Lock()
+	defer mu.Unlock()
 
 	f, err := os.Create(filename)
 	if err != nil {
