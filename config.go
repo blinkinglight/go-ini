@@ -324,11 +324,12 @@ func Delete(section, key string) {
 	}
 }
 
-func Set(section, key, value string) {
+func Set(section, key string, _value interface{}) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	i := item{}
+	value := fmt.Sprintf("%v", _value)
 
 	if len(value) == 0 {
 		i.value = ""
