@@ -37,6 +37,9 @@ func Read(filename string) {
 		panic("failed open config file")
 	}
 
+	keys = []string{}
+	config = make(map[string]map[string]item)
+
 	rs := bufio.NewScanner(f)
 
 	openB := false
