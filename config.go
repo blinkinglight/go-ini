@@ -40,9 +40,10 @@ func (c *Config) Read(filename string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	f, err := os.Open(filename)
+	defer f.Close()
 
 	if err != nil {
-		panic("failed open config file")
+		panic("failed open config file: " + err.Error())
 	}
 
 	c.keys = []string{}
@@ -375,8 +376,9 @@ func (c *Config) Write(filename string) {
 	defer c.mu.Unlock()
 
 	f, err := os.Create(filename)
+	defer f.Close()
 	if err != nil {
-		panic("failed save config")
+		panic("failed save config " + err.Error())
 	}
 
 	for _, section := range c.keys {
