@@ -17,10 +17,18 @@ type item struct {
 
 const keyNotFound = "key not found in config file"
 
-var keys []string
-var config map[string]map[string]item = make(map[string]map[string]item)
+type Config struct {
+	keys   []string
+	config map[string]map[string]item
+	mu     sync.RWMutex
+}
 
-var mu sync.RWMutex
+func New() *Config {
+	c := new(Config)
+	c.config = make(map[string]map[string]item)
+	c.keys = []string{}
+	return c
+}
 
 func spl(q string) []string {
 	r := []string{}
@@ -28,17 +36,17 @@ func spl(q string) []string {
 	return r
 }
 
-func Read(filename string) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Config) Read(filename string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	f, err := os.Open(filename)
 
 	if err != nil {
 		panic("failed open config file")
 	}
 
-	keys = []string{}
-	config = make(map[string]map[string]item)
+	c.keys = []string{}
+	c.config = make(map[string]map[string]item)
 
 	rs := bufio.NewScanner(f)
 
@@ -69,8 +77,8 @@ func Read(filename string) {
 			tag = t[0:strings.Index(t, "{")]
 			tag = strings.Trim(tag, " ")
 			openB = true
-			config[tag] = make(map[string]item)
-			keys = append(keys, tag)
+			c.config[tag] = make(map[string]item)
+			c.keys = append(c.keys, tag)
 			continue
 		}
 
@@ -102,116 +110,116 @@ func Read(filename string) {
 				item.value = opts[1]
 				item.haveValue = true
 				item.comment = comment
-				config[tag][opts[0]] = item
+				c.config[tag][opts[0]] = item
 			} else {
 				item.value = ""
 				item.haveValue = false
 				item.comment = comment
-				config[tag][t] = item
+				c.config[tag][t] = item
 			}
 		}
 
 	}
 }
 
-func GetKeysDefault(section string, d []string) []string {
-	r, e := GetKeys(section)
+func (c *Config) GetKeysDefault(section string, d []string) []string {
+	r, e := c.GetKeys(section)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetKeysListDefault(section string, d []string) []string {
-	r, e := GetKeysList(section)
+func (c *Config) GetKeysListDefault(section string, d []string) []string {
+	r, e := c.GetKeysList(section)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetStringDefault(section, key, d string) string {
-	r, e := GetString(section, key)
+func (c *Config) GetStringDefault(section, key, d string) string {
+	r, e := c.GetString(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetBoolDefault(section, key string, d bool) bool {
-	r, e := GetBool(section, key)
+func (c *Config) GetBoolDefault(section, key string, d bool) bool {
+	r, e := c.GetBool(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetFloatDefault(section, key string, d float32) float32 {
-	r, e := GetFloat(section, key)
+func (c *Config) GetFloatDefault(section, key string, d float32) float32 {
+	r, e := c.GetFloat(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetIntDefault(section, key string, d int) int {
-	r, e := GetInt(section, key)
+func (c *Config) GetIntDefault(section, key string, d int) int {
+	r, e := c.GetInt(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetFloat64Default(section, key string, d float64) float64 {
-	r, e := GetFloat64(section, key)
+func (c *Config) GetFloat64Default(section, key string, d float64) float64 {
+	r, e := c.GetFloat64(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func GetInt64Default(section, key string, d int64) int64 {
-	r, e := GetInt64(section, key)
+func (c *Config) GetInt64Default(section, key string, d int64) int64 {
+	r, e := c.GetInt64(section, key)
 	if e != nil {
 		return d
 	}
 	return r
 }
 
-func Sections() []string {
-	mu.RLock()
-	defer mu.RUnlock()
+func (c *Config) Sections() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	list := []string{}
 
-	for k, _ := range config {
+	for k, _ := range c.config {
 		list = append(list, k)
 	}
 	return list
 }
 
-func GetKeys(section string) ([]string, error) {
-	mu.RLock()
-	defer mu.RUnlock()
+func (c *Config) GetKeys(section string) ([]string, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	list := []string{}
-	if _, ok := config[section]; !ok {
+	if _, ok := c.config[section]; !ok {
 		return []string{}, fmt.Errorf(keyNotFound)
 	}
-	for k, _ := range config[section] {
+	for k, _ := range c.config[section] {
 		list = append(list, k)
 	}
 	return list, nil
 }
 
-func GetKeysList(section string) ([]string, error) {
-	mu.RLock()
-	defer mu.RUnlock()
+func (c *Config) GetKeysList(section string) ([]string, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	list := []string{}
 
-	if _, ok := config[section]; !ok {
+	if _, ok := c.config[section]; !ok {
 		return []string{}, fmt.Errorf(keyNotFound)
 	}
 
-	for k, v := range config[section] {
+	for k, v := range c.config[section] {
 		if v.haveValue == true {
 			continue
 		}
@@ -221,20 +229,20 @@ func GetKeysList(section string) ([]string, error) {
 	return list, nil
 }
 
-func GetString(section, key string) (string, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	r, ok := config[section][key]
+func (c *Config) GetString(section, key string) (string, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	r, ok := c.config[section][key]
 	if !ok {
 		return "", fmt.Errorf(keyNotFound)
 	}
 	return r.value, nil
 }
 
-func GetBool(section, key string) (bool, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	v, ok := config[section][key]
+func (c *Config) GetBool(section, key string) (bool, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	v, ok := c.config[section][key]
 	if !ok {
 		return false, fmt.Errorf(keyNotFound)
 	}
@@ -245,10 +253,10 @@ func GetBool(section, key string) (bool, error) {
 	return r, nil
 }
 
-func GetInt(section, key string) (int, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	tmp, ok := config[section][key]
+func (c *Config) GetInt(section, key string) (int, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	tmp, ok := c.config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
 	}
@@ -261,10 +269,10 @@ func GetInt(section, key string) (int, error) {
 	return int(r), nil
 }
 
-func GetFloat(section, key string) (float32, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	tmp, ok := config[section][key]
+func (c *Config) GetFloat(section, key string) (float32, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	tmp, ok := c.config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
 	}
@@ -277,10 +285,10 @@ func GetFloat(section, key string) (float32, error) {
 	return float32(r), nil
 }
 
-func GetInt64(section, key string) (int64, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	tmp, ok := config[section][key]
+func (c *Config) GetInt64(section, key string) (int64, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	tmp, ok := c.config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
 	}
@@ -293,10 +301,10 @@ func GetInt64(section, key string) (int64, error) {
 	return r, nil
 }
 
-func GetFloat64(section, key string) (float64, error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	tmp, ok := config[section][key]
+func (c *Config) GetFloat64(section, key string) (float64, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	tmp, ok := c.config[section][key]
 	if !ok {
 		return 0, fmt.Errorf(keyNotFound)
 	}
@@ -309,27 +317,27 @@ func GetFloat64(section, key string) (float64, error) {
 	return r, nil
 }
 
-func Delete(section, key string) {
-	mu.RLock()
-	defer mu.RUnlock()
+func (c *Config) Delete(section, key string) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	if len(key) == 0 {
-		delete(config, section)
+		delete(c.config, section)
 		ks := []string{}
-		for _, v := range keys {
+		for _, v := range c.keys {
 			if v == section {
 				continue
 			}
 			ks = append(ks, v)
 		}
-		keys = ks
+		c.keys = ks
 	} else {
-		delete(config[section], key)
+		delete(c.config[section], key)
 	}
 }
 
-func Set(section, key string, _value interface{}) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Config) Set(section, key string, _value interface{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	i := item{}
 	value := fmt.Sprintf("%v", _value)
@@ -342,38 +350,38 @@ func Set(section, key string, _value interface{}) {
 		i.haveValue = true
 	}
 
-	if _, ok := config[section]; !ok {
-		config[section] = make(map[string]item)
-		keys = append(keys, section)
+	if _, ok := c.config[section]; !ok {
+		c.config[section] = make(map[string]item)
+		c.keys = append(c.keys, section)
 	}
 
-	config[section][key] = i
+	c.config[section][key] = i
 
 }
 
-func Exists(section, key string) bool {
-	mu.RLock()
-	defer mu.RUnlock()
-	if _, ok := config[section]; ok {
-		if _, ok := config[section][key]; ok {
+func (c *Config) Exists(section, key string) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if _, ok := c.config[section]; ok {
+		if _, ok := c.config[section][key]; ok {
 			return true
 		}
 	}
 	return false
 }
 
-func Write(filename string) {
-	mu.Lock()
-	defer mu.Unlock()
+func (c *Config) Write(filename string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	f, err := os.Create(filename)
 	if err != nil {
 		panic("failed save config")
 	}
 
-	for _, section := range keys {
+	for _, section := range c.keys {
 		f.WriteString(fmt.Sprintln(section, "{"))
-		for k, v := range config[section] {
+		for k, v := range c.config[section] {
 			if !v.haveValue {
 				continue
 			}
@@ -384,7 +392,7 @@ func Write(filename string) {
 			f.WriteString(fmt.Sprintf("  %s = %s %s\n", k, v.value, comment))
 		}
 
-		for k, v := range config[section] {
+		for k, v := range c.config[section] {
 			if v.haveValue {
 				continue
 			}
