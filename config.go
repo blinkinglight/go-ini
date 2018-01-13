@@ -20,6 +20,7 @@ const keyNotFound = "key not found in config file"
 type Config struct {
 	keys   []string
 	config map[string]map[string]item
+	fname  string
 	mu     sync.RWMutex
 }
 
@@ -36,9 +37,19 @@ func spl(q string) []string {
 	return r
 }
 
+func (c *Config) Save() {
+	if c.fname != "" {
+		c.Write(c.fname)
+		return
+	}
+	panic("must read config first")
+
+}
+
 func (c *Config) Read(filename string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.fname = filename
 	f, err := os.Open(filename)
 	defer f.Close()
 
