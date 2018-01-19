@@ -46,6 +46,14 @@ func (c *Config) Save() {
 
 }
 
+func (c *Config) Reset() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.keys = []string{}
+	c.config = make(map[string]map[string]item)
+}
+
 func (c *Config) Read(filename string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
