@@ -281,7 +281,7 @@ func (c *Config) GetInt(section, key string) (int, error) {
 		return 0, fmt.Errorf(keyNotFound)
 	}
 
-	r, e := strconv.ParseInt(tmp.value, 16, 32)
+	r, e := strconv.ParseInt(tmp.value, 10, 32)
 
 	if e != nil {
 		return 0, fmt.Errorf("%v", e)
@@ -313,7 +313,7 @@ func (c *Config) GetInt64(section, key string) (int64, error) {
 		return 0, fmt.Errorf(keyNotFound)
 	}
 
-	r, e := strconv.ParseInt(tmp.value, 16, 64)
+	r, e := strconv.ParseInt(tmp.value, 10, 64)
 
 	if e != nil {
 		return 0, fmt.Errorf("%v", e)
