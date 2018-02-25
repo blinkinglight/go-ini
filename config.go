@@ -76,7 +76,7 @@ func (c *Config) Read(filename string) {
 	lineN := 0
 	for rs.Scan() {
 		lineN++
-		t := strings.Trim(rs.Text(), " \n")
+		t := strings.Trim(rs.Text(), " \n\t")
 
 		if len(t) > 0 {
 			if t[0] == '#' {
