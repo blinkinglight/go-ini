@@ -54,19 +54,22 @@ notifier {
 
 simple api. supports only: string, int, int64, float32, float64 and bool types.
 
+cfg := ini.New() // now you can have several configs in one app
 
-ini.Read('config.ini') - parses the file
+cfg.Read('config.ini') - parses the file
 
-ini.Write('config.ini') - writes config to file
+cfg.Save() - saves config to file
 
-
-ini.Set("section", "key", "value") - adds item to config if value is empty, add key.
-
-ini.Delete("section", "key") - if key is empty, deletes section
+cfg.Write('config.ini') - writes config to file
 
 
-ini.GetKeysList("section") - returns all keys without values
+cfg.Set("section", "key", "value") - adds item to config if value is empty, add key.
+
+cfg.Delete("section", "key") - if key is empty, deletes section
 
 
-ini.Exists("section", "key") - returns true if section has that key
+cfg.GetKeysList("section") - returns all keys without values
+
+
+cfg.Exists("section", "key") - returns true if section has that key
 
