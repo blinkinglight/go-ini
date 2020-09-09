@@ -21,13 +21,14 @@ type Config struct {
 	keys   []string
 	config map[string]map[string]item
 	fname  string
-	mu     sync.RWMutex
+	mu     *sync.RWMutex
 }
 
 func New() *Config {
 	c := new(Config)
 	c.config = make(map[string]map[string]item)
 	c.keys = []string{}
+	c.mu = &sync.RWMutex{}
 	return c
 }
 
